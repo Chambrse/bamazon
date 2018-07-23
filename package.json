@@ -1,0 +1,29 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "An \"amazon\" CLI app for practice with node and mySQL.",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chambrse/bamazon.git"
+  },
+  "keywords": [
+    "amazon",
+    "node",
+    "mysql"
+  ],
+  "author": "Shane",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Chambrse/bamazon/issues"
+  },
+  "homepage": "https://github.com/Chambrse/bamazon#readme",
+  "dependencies": {
+    "columnify": "^1.5.4",
+    "inquirer": "^6.0.0",
+    "mysql": "^2.16.0"
+  }
+}
