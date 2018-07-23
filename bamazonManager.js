@@ -47,7 +47,7 @@ inquirer.prompt([
             addInv(currentProductsTable);
             break;
         case "Add new product":
-            newProduct();
+            newProduct(currentProductsTable);
             break;
         case "Nothing, I'm done.":
             console.log("Thanks!")
@@ -134,7 +134,7 @@ function addInv(result) {
                 product_name: inquirerResponse.productToUpdate
             }
         ], function(err, result, fields) {
-            
+
             if (err) throw err;
 
             console.log("Quantity updated.");
@@ -143,6 +143,45 @@ function addInv(result) {
 
         });
 
+    });
+
+};
+
+function newProduct(result) {
+
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Product name: ",
+            name: "product_name"
+        },
+        {
+            type: "list",
+            message: "Department: ",
+            name: "department",
+            choices: ["Shoe", "Aerospace", "Electronics", "Grocery", "Pet"]
+        },
+        {
+            type: "input",
+            message: "Price: ",
+            name: "price"
+        },
+        {
+            type: "input",
+            message: "Quantity: ",
+            name: "quantity"
+        }
+    ]).then(function(inquirerResponse) {
+        
+        let query = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES('" + inquirerResponse.product_name + "', '" + inquirerResponse.department + "', '" + inquirerResponse.price + "', '" + inquirerResponse.quantity + "')";
+        connection.query(query, function(err, result, fields) {
+            if (err) throw err;
+
+            console.log("product added!");
+
+            updateCurrent();
+
+        });
     });
 
 };
