@@ -15,6 +15,18 @@ let connection = mysql.createConnection({
     database: "bamazon"
 });
 
+// Get a look at the products table at the start of the program
+let currentProductsTable;
+
+function updateCurrent() {
+    connection.query("SELECT * FROM products", function (err, result, fields) {
+        if (err) throw err;
+        currentProductsTable = result;
+    });
+};
+
+updateCurrent();
+
 inquirer.prompt([
     {
         type: "list",
@@ -22,100 +34,116 @@ inquirer.prompt([
         choices: ["View products for sale.", "View low inventory", "Add to inventory", "Add new product", "Nothing, I'm done."],
         name: "managerChoice"
     },
-]).then(function(inquirerResponse) {
+]).then(function (inquirerResponse) {
 
     switch (inquirerResponse.managerChoice) {
         case "View products for sale.":
-            viewProducts();
-        break;
+            viewProducts(currentProductsTable);
+            break;
         case "View low inventory":
-            lowInv();
-        break;
+            lowInv(currentProductsTable);
+            break;
         case "Add to inventory":
-            addInv();
-        break;
+            addInv(currentProductsTable);
+            break;
         case "Add new product":
             newProduct();
-        break;
+            break;
         case "Nothing, I'm done.":
             console.log("Thanks!")
-        break;
+            break;
         default:
-        break;
+            break;
     };
 
 });
 
-function viewProducts() {
+function viewProducts(result) {
 
-    let query = "SELECT * FROM products";
-    connection.query(query, function (err, result, fields) {
-        if (err) throw err;
-        
-        console.log(line);
+    console.log(line);
 
-        // Format the data for columnify
-        let data = [];
-        result.forEach(element => {
+    // Format the data for columnify
+    let data = [];
+    result.forEach(element => {
 
-            data.push({
-                Id: element.id,
-                Name: element.product_name,
-                Price: element.price,
-                Available: element.stock_quantity
-            });
-
+        data.push({
+            Id: element.id,
+            Name: element.product_name,
+            Price: element.price,
+            Available: element.stock_quantity
         });
-
-        console.log(columnify(data));
 
     });
 
+    console.log(columnify(data));
+
 };
 
-function lowInv() {
+function lowInv(result) {
 
-    let query = "SELECT * FROM products";
-    connection.query(query, function (err, result, fields) {
+    let productObj = result.filter(function (obj) { return obj.stock_quantity <= 20; });
 
-        if (err) throw err;
+    console.log(line);
 
-        let productObj = result.filter(function(obj) { return obj.stock_quantity <= 20; });
-        
-        console.log(line);
+    // Format the data for columnify
+    let data = [];
+    productObj.forEach(element => {
 
-        // Format the data for columnify
-        let data = [];
-        productObj.forEach(element => {
-
-            data.push({
-                Id: element.id,
-                Name: element.product_name,
-                Price: element.price,
-                Available: element.stock_quantity
-            });
-
+        data.push({
+            Id: element.id,
+            Name: element.product_name,
+            Price: element.price,
+            Available: element.stock_quantity
         });
 
-        console.log(columnify(data));
+    });
 
-    });    
+    console.log(columnify(data));
 
 };
 
-function addInv() {
+function addInv(result) {
 
-    connection.query("SELECT * FROM products", function(err, result, fields) {
-        
+    let choices = [];
+
+    result.forEach(element => {
+        choices.push(element.product_name);
     });
 
     inquirer.prompt([
         {
             type: "list",
-            message: "Which item would you like to add?"
-            
+            message: "Which item would you like to add?",
+            choices: choices,
+            name: "productToUpdate"
+        },
+        {
+            type: "input",
+            message: "How many to add?",
+            name: "addQuantity"
         }
-    ])
+    ]).then(function(inquirerResponse) {
 
-}
+        let productObj = currentProductsTable.find(function (obj) { return obj.product_name === inquirerResponse.productToUpdate; });
+
+        connection.query("UPDATE products SET ? WHERE ?",[
+            {
+                stock_quantity: productObj.stock_quantity + parseInt(inquirerResponse.addQuantity)
+            },
+            {
+                product_name: inquirerResponse.productToUpdate
+            }
+        ], function(err, result, fields) {
+            
+            if (err) throw err;
+
+            console.log("Quantity updated.");
+
+            updateCurrent();
+
+        });
+
+    });
+
+};
 
