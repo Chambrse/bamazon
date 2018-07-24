@@ -46,12 +46,19 @@ function displayStock() {
 // Start the prompt to the customer so they can buy stuff.
 function sellItems(currentStock) {
 
+    let choices = [];
+
+    currentStock.forEach(element => {
+        choices.push(element.product_name);
+    });
+
     console.log(line + "\n");
 
     inquirer.prompt([
         {
-            type: "input",
+            type: "list",
             message: "What would you like to buy? ",
+            choices: choices,
             name: "productToBuy"
         },
         {
@@ -69,6 +76,7 @@ function sellItems(currentStock) {
 
             // Get the current available stock
             let selectedProductQuantity = productObj.stock_quantity;
+            let selectedProductSales = productObj.product_sales;
 
             // If we have enough to fulfill the order, 
             if (selectedProductQuantity >= inquirerResponse.productQuantity) {
@@ -85,11 +93,26 @@ function sellItems(currentStock) {
 
                     if (err) throw err;
 
-                    console.log("Total: " + inquirerResponse.productQuantity * productObj.price);
+                    let total = inquirerResponse.productQuantity * productObj.price;
+
+                    console.log("Total: $" + total);
 
                     console.log("Thank you, come again.");
 
-                    connection.end();
+                    connection.query("UPDATE products SET ? WHERE ?", [
+                        {
+                            product_sales: selectedProductSales + total
+                        },
+                        {
+                            product_name: inquirerResponse.productToBuy
+                        }
+                    ], function(err, result, fields) {
+
+                        if (err) throw err;
+
+                        connection.end();
+
+                    });
 
                 });
 

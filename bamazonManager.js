@@ -26,37 +26,45 @@ function updateCurrent() {
 };
 
 updateCurrent();
+start();
 
-inquirer.prompt([
-    {
-        type: "list",
-        message: "What would you like to do?",
-        choices: ["View products for sale.", "View low inventory", "Add to inventory", "Add new product", "Nothing, I'm done."],
-        name: "managerChoice"
-    },
-]).then(function (inquirerResponse) {
+function start() {
 
-    switch (inquirerResponse.managerChoice) {
-        case "View products for sale.":
-            viewProducts(currentProductsTable);
-            break;
-        case "View low inventory":
-            lowInv(currentProductsTable);
-            break;
-        case "Add to inventory":
-            addInv(currentProductsTable);
-            break;
-        case "Add new product":
-            newProduct(currentProductsTable);
-            break;
-        case "Nothing, I'm done.":
-            console.log("Thanks!")
-            break;
-        default:
-            break;
-    };
+    console.log(line);
 
-});
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "What would you like to do?",
+            choices: ["View products for sale.", "View low inventory", "Add to inventory", "Add new product", "Nothing, I'm done."],
+            name: "managerChoice"
+        },
+    ]).then(function (inquirerResponse) {
+
+        switch (inquirerResponse.managerChoice) {
+            case "View products for sale.":
+                viewProducts(currentProductsTable);
+                break;
+            case "View low inventory":
+                lowInv(currentProductsTable);
+                break;
+            case "Add to inventory":
+                addInv(currentProductsTable);
+                break;
+            case "Add new product":
+                newProduct(currentProductsTable);
+                break;
+            case "Nothing, I'm done.":
+                console.log("Thanks!");
+                connection.end();
+                break;
+            default:
+                break;
+        };
+
+    });
+
+};
 
 function viewProducts(result) {
 
@@ -77,11 +85,13 @@ function viewProducts(result) {
 
     console.log(columnify(data));
 
+    start();
+
 };
 
 function lowInv(result) {
 
-    let productObj = result.filter(function (obj) { return obj.stock_quantity <= 20; });
+    let productObj = result.filter(function (obj) { return obj.stock_quantity <= 5; });
 
     console.log(line);
 
@@ -99,6 +109,8 @@ function lowInv(result) {
     });
 
     console.log(columnify(data));
+
+    start();
 
 };
 
@@ -122,24 +134,26 @@ function addInv(result) {
             message: "How many to add?",
             name: "addQuantity"
         }
-    ]).then(function(inquirerResponse) {
+    ]).then(function (inquirerResponse) {
 
         let productObj = currentProductsTable.find(function (obj) { return obj.product_name === inquirerResponse.productToUpdate; });
 
-        connection.query("UPDATE products SET ? WHERE ?",[
+        connection.query("UPDATE products SET ? WHERE ?", [
             {
                 stock_quantity: productObj.stock_quantity + parseInt(inquirerResponse.addQuantity)
             },
             {
                 product_name: inquirerResponse.productToUpdate
             }
-        ], function(err, result, fields) {
+        ], function (err, result, fields) {
 
             if (err) throw err;
 
             console.log("Quantity updated.");
 
             updateCurrent();
+
+            start();
 
         });
 
@@ -171,18 +185,19 @@ function newProduct(result) {
             message: "Quantity: ",
             name: "quantity"
         }
-    ]).then(function(inquirerResponse) {
-        
+    ]).then(function (inquirerResponse) {
+
         let query = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES('" + inquirerResponse.product_name + "', '" + inquirerResponse.department + "', '" + inquirerResponse.price + "', '" + inquirerResponse.quantity + "')";
-        connection.query(query, function(err, result, fields) {
+        connection.query(query, function (err, result, fields) {
             if (err) throw err;
 
-            console.log("product added!");
+            console.log("Product added!");
 
             updateCurrent();
 
+            start();
+
         });
     });
-
 };
 
