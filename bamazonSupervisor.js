@@ -15,6 +15,7 @@ let connection = mysql.createConnection({
     database: "bamazon"
 });
 
+//Prompt the user
 inquirer.prompt([
     {
         type: "list",
@@ -22,32 +23,36 @@ inquirer.prompt([
         choices: ["View sales by department", "Create new department"],
         name: "supervisorChoice"
     }
-]).then(function(inquirerResponse) {
+]).then(function (inquirerResponse) {
 
     switch (inquirerResponse.supervisorChoice) {
         case "View sales by department":
             viewSales();
-        break;
+            break;
         case "Create new department":
             newDepartment();
-        break;
+            break;
         default:
-        break;
+            break;
     };
-
 });
 
 function viewSales() {
-    
-    let query = "SELECT SUM(products.product_sales) AS department_sales, departments.department_id, departments.department_name, departments.over_head_costs FROM departments INNER JOIN products ON departments.department_name = products.department_name GROUP BY department_name ORDER BY department_id";
-    connection.query(query, function(err, result, fields) {
+
+    // Add up the sales according to department
+    let query = "SELECT SUM(products.product_sales) AS department_sales, departments.department_id, \
+    departments.department_name, departments.over_head_costs \
+    FROM departments \
+    INNER JOIN products ON departments.department_name = products.department_name \
+    GROUP BY department_name \
+    ORDER BY department_id";
+    connection.query(query, function (err, result, fields) {
         if (err) throw err;
 
-        console.log(result);
-
+        // Formatting
         let data = [];
         result.forEach(element => {
-    
+
             data.push({
                 Id: element.department_id,
                 Department: element.department_name,
@@ -55,15 +60,42 @@ function viewSales() {
                 Overhead: element.over_head_costs,
                 "Total Profit": element.department_sales - element.over_head_costs
             });
-    
         });
 
         console.log(columnify(data));
-        
+
+    });
+};
+
+function newDepartment() {
+
+    console.log("test");
+
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter a name for the new department: ",
+            name: "department_name"
+        },
+        {
+            type: "input",
+            message: "What would the overhead of the new department? ",
+            name: "overhead"
+        }
+    ]).then(function(inquirerResponse) {
+
+        let query="INSERT INTO departments (department_name, over_head_costs) VALUES ('" + inquirerResponse.department_name + "', '" + inquirerResponse.Overhead + "');";
+        connection.query(query, function(err, result, fields) {
+
+            if (err) throw err;
+
+            console.log("Created!");
+
+        });
+
     });
 
-
-}
+};
 
 
 
