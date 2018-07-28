@@ -36,3 +36,4 @@ node bamaonSupervisor.js
 ## Gif Tour
 
 This Gif goes through some of the main functionality of the app.
+<img src="bamazon_Demo.gif"/>
