@@ -78,9 +78,7 @@ function viewSales() {
 };
 
 function newDepartment() {
-
-    console.log("test");
-
+    
     inquirer.prompt([
         {
             type: "input",
