@@ -15,27 +15,35 @@ let connection = mysql.createConnection({
     database: "bamazon"
 });
 
-//Prompt the user
-inquirer.prompt([
-    {
-        type: "list",
-        message: "What would you like to do?",
-        choices: ["View sales by department", "Create new department"],
-        name: "supervisorChoice"
-    }
-]).then(function (inquirerResponse) {
+start();
 
-    switch (inquirerResponse.supervisorChoice) {
-        case "View sales by department":
-            viewSales();
+function start() {
+
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "What would you like to do?",
+            choices: ["View sales by department", "Create new department", "Nothing, I'm done."],
+            name: "supervisorChoice"
+        }
+    ]).then(function (inquirerResponse) {
+
+        switch (inquirerResponse.supervisorChoice) {
+            case "View sales by department":
+                viewSales();
+                break;
+            case "Create new department":
+                newDepartment();
+                break;
+            case "Nothing, I'm done.":
+                console.log("Thank you!");
+                connection.end();
             break;
-        case "Create new department":
-            newDepartment();
-            break;
-        default:
-            break;
-    };
-});
+            default:
+                break;
+        };
+    });
+};
 
 function viewSales() {
 
@@ -43,7 +51,7 @@ function viewSales() {
     let query = "SELECT SUM(products.product_sales) AS department_sales, departments.department_id, \
     departments.department_name, departments.over_head_costs \
     FROM departments \
-    INNER JOIN products ON departments.department_name = products.department_name \
+    LEFT JOIN products ON departments.department_name = products.department_name \
     GROUP BY department_name \
     ORDER BY department_id";
     connection.query(query, function (err, result, fields) {
@@ -64,6 +72,8 @@ function viewSales() {
 
         console.log(columnify(data));
 
+        start();
+
     });
 };
 
@@ -82,16 +92,18 @@ function newDepartment() {
             message: "What would the overhead of the new department? ",
             name: "overhead"
         }
-    ]).then(function(inquirerResponse) {
+    ]).then(function (inquirerResponse) {
 
-        let query="INSERT INTO departments (department_name, over_head_costs) VALUES ('" + inquirerResponse.department_name + "', '" + inquirerResponse.Overhead + "');";
-        connection.query(query, function(err, result, fields) {
+        let query = "INSERT INTO departments (department_name, over_head_costs) VALUES ('" + inquirerResponse.department_name + "', '" + inquirerResponse.overhead + "');";
+        connection.query(query, function (err, result, fields) {
 
             if (err) throw err;
 
             console.log("Created!");
 
+            start();
         });
+
 
     });
 
